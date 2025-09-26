@@ -11,5 +11,6 @@ export const AuthRequestSchema = z.object({
 })
 
 export const AuthResRequestSchema = z.object({
-  decryptedValue: z.string()
+  decryptedValue: z.string(),
+  y: z.array().nullable() // The attribute array
 })

@@ -11,16 +11,28 @@ import {
 export class TrustedAuthority {
   msk;
   _pp;
-  constructor() {
+  _serializedPP;
+  constructor() {}
+
+  async init() {
+    await mcl.init(mcl.BLS12_381);
     if (!this.retrieveParams()) {
       this.SetUp();
       this.storeParams();
     }
   }
 
-  get pp() {
+  // get pp() {
+  //   this.updateGlobalAttribute();
+  //   return this._pp;
+  // }
+  get serializedPP() {
     this.updateGlobalAttribute();
-    return this._pp;
+    return this._serializedPP;
+  }
+
+  get arrayParamLength() {
+    return this.msk.s.length;
   }
 
   retrieveParams() {
@@ -30,9 +42,11 @@ export class TrustedAuthority {
     const U = new Array(arrayParams.length - 1);
     const s = new Array(arrayParams.length);
     const h_i = new Array(arrayParams.length);
+    const serializedH_i = new Array(arrayParams.length);
     arrayParams.forEach((array_param) => {
       s[array_param.id] = mcl.deserializeHexStrToFr(array_param.s);
       h_i[array_param.id] = mcl.deserializeHexStrToG1(array_param.h_i);
+      serializedH_i[array_param.id] = array_param.h_i;
       if (array_param.u != "EOF") U[array_param.id] = array_param.u;
     });
     this.msk = {
@@ -48,9 +62,25 @@ export class TrustedAuthority {
       h_i,
       U,
     };
+    this._serializedPP = {
+      g1: params.g1,
+      g2: params.g2,
+      eggalpha: params.eggalpha,
+      h: params.h,
+      h_i: serializedH_i,
+      U,
+    };
     return true;
   }
   storeParams() {
+    this._serializedPP = {
+      g1: this._pp.g1.serializeToHexStr(),
+      g2: this._pp.g2.serializeToHexStr(),
+      eggalpha: this._pp.eggalpha.serializeToHexStr(),
+      h: this._pp.h.serializeToHexStr(),
+      h_i: new Array(this.arrayParamLength),
+      U: this._pp.U,
+    };
     insertParams.run(
       this.msk.alpha.serializeToHexStr(),
       this.msk.beta.serializeToHexStr(),
@@ -59,20 +89,23 @@ export class TrustedAuthority {
       this._pp.eggalpha.serializeToHexStr(),
       this._pp.h.serializeToHexStr()
     );
+    // add serializedPP
     let i;
     for (i = 0; i < this._pp.U.length; i++) {
+      this._serializedPP.h_i[i] = this._pp.h_i[i].serializeToHexStr();
       insertArrayParams.run(
         i,
         this._pp.U[i],
         this.msk.s[i].serializeToHexStr(),
-        this._pp.h_i[i].serializeToHexStr()
+        this._serializedPP.h_i[i]
       );
     }
+    this._serializedPP.h_i[i] = this._pp.h_i[i].serializeToHexStr();
     insertArrayParams.run(
       i,
       "EOF",
       this.msk.s[i].serializeToHexStr(),
-      this._pp.h_i[i].serializeToHexStr()
+      this._serializedPP.h_i[i]
     );
     logger.info(`Parameters stored in database.`);
   }
@@ -82,6 +115,7 @@ export class TrustedAuthority {
     const attrParams = getAttributeArrayParams.all();
     attrParams.forEach((param) => {
       this._pp.U[param.id] = param.u;
+      this._serializedPP.U[param.id] = param.u;
     });
   }
 
@@ -125,15 +159,15 @@ export class TrustedAuthority {
     this._pp = pp;
   }
 
-  KeyGen(R) {
-    this.updateGlobalAttribute();
+  KeyGen(y) {
+    // this.updateGlobalAttribute();
     // Attribute vector y
-    const y = new Array(this.msk.s.length);
-    let i;
-    for (i = 0; i < this._pp.U.length; i++) {
-      y[i] = R.includes(this._pp.U[i]) ? 1 : 0;
-    }
-    y[i] = 1;
+    // const y = new Array(this.msk.s.length);
+    // let i;
+    // for (i = 0; i < this._pp.U.length; i++) {
+    //   y[i] = R.includes(this._pp.U[i]) ? 1 : 0;
+    // }
+    // y[i] = 1;
     // console.log(y);
     const theta = new mcl.Fr();
     const mu = new mcl.Fr();

@@ -30,15 +30,16 @@ export const insertArrayParams = db.prepare(
 );
 export const getArrayParams = db.prepare(`SELECT * FROM array_params;`);
 export const getAttributeArrayParams = db.prepare(`SELECT id, u FROM array_params;`)
+export const getArrayParamsCount = db.prepare(`SELECT COUNT(id) as count FROM array_params;`)
 
 db.prepare(
     `CREATE TABLE IF NOT EXISTS user_attr (
     userid TEXT not null,
     attrid INTEGER not null,
-    PRIMARY KEY (userid, attr)   
+    PRIMARY KEY (userid, attrid)   
     );`
-)
-export const getUserAttrId = db.prepare(`SELECT * FROM user_attr WHERE userid = ?;`)
+).run()
+export const getUserAttrIds = db.prepare(`SELECT attrid FROM user_attr WHERE userid = ?;`)
 export const insertUserAttrId = db.prepare(`INSERT INTO user_attr (userid, attrid) VALUES (?, ?);`)
 
 logger.info(`Database initialized.`)
