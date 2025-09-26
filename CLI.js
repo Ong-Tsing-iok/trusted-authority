@@ -1,11 +1,7 @@
-import { input, select, confirm } from "@inquirer/prompts";
+import { input, select, confirm, checkbox } from "@inquirer/prompts";
 import Table from "tty-table";
 import winston, { format } from "winston";
 import Database from "better-sqlite3";
-// Get user attribute
-// add user attribute (can be used like add 普通 機密)
-// Will check if exist in global attributes
-// remove user attribute (can be used like remove 普通 機密)
 
 const logger = winston.createLogger({
   //   level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
@@ -25,11 +21,31 @@ const logger = winston.createLogger({
 const db = new Database("data/TA.db");
 const getAttrs = db.prepare(`SELECT id, u FROM array_params WHERE u != 'EOF';`);
 const updateAttr = db.prepare(`UPDATE array_params SET u = ? WHERE id = ?;`);
+const getUserAttrIds = db.prepare(
+  `SELECT attrid FROM user_attr WHERE userid = ?;`
+);
+const removeUserAttrId = db.prepare(
+  `DELETE FROM user_attr WHERE userid = ? AND attrid = ?;`
+);
+const insertUserAttrId = db.prepare(
+  `INSERT INTO user_attr (userid, attrid) VALUES (?, ?);`
+);
 
 function showAndLogError(error, actionStr) {
   console.log(`發生錯誤：`);
   console.log(error);
   logger.error(error, { actionStr });
+}
+
+function exitProgram() {
+  logger.info(`Command line interface exited.`);
+  console.groupEnd();
+  console.log(`已離開程式`);
+  process.exit(0);
+}
+
+function handleCtrlCError(error) {
+  if (error instanceof Error && error.name == "ExitPromptError") exitProgram();
 }
 
 function chunk(arr, size) {
@@ -65,7 +81,7 @@ async function globalActions() {
       showHeader: false,
     }).render();
     console.log(p);
-    console.log("")
+    console.log("");
   }
 
   let dirty = false;
@@ -97,7 +113,7 @@ async function globalActions() {
                 attrs.filter((attr) => attr.u == "None").length
               }`
             );
-            console.log(`若要取消新增，請直接按下Enter。`);
+            console.log(`若要取消新增，請直接按下Enter`);
             const newAttrs = (await input({ message: "要新增的屬性" }))
               .trim()
               .split(" ")
@@ -110,10 +126,8 @@ async function globalActions() {
                 (attr) => attr.u == "None" && !attr.newU
               );
               if (!emptyAttr) {
-                console.log(
-                  `屬性總數已達上限！以下屬性將不會被新增：`
-                );
-                console.log(`${newAttrs.slice(i).join(" ")}`)
+                console.log(`屬性總數已達上限！以下屬性將不會被新增：`);
+                console.log(`${newAttrs.slice(i).join(" ")}`);
                 break;
               }
               if (findAttr(newAttrs[i])) {
@@ -128,7 +142,7 @@ async function globalActions() {
             if (addedAttr.length != 0) {
               showAttrs();
               console.log(`成功暫存以下新增屬性：`);
-              console.log(`${addedAttr.join(" ")}`);
+              console.log(addedAttr.join(" "));
               console.log(`後續請應用變更\n`);
             } else {
               console.log(`沒有新增屬性`);
@@ -141,7 +155,7 @@ async function globalActions() {
             console.log(
               `注意！所有檔案擁有的該屬性皆會變更成新的屬性！請小心使用！`
             );
-            console.log(`若要取消變更，請直接按下Enter。`);
+            console.log(`若要取消變更，請直接按下Enter`);
             let attrToChange = "";
             while (true) {
               attrToChange = (
@@ -229,12 +243,134 @@ async function globalActions() {
           return;
       }
     } catch (error) {
+      handleCtrlCError(error);
       showAndLogError(error, globalAction);
     }
   }
 }
 
-async function userActions() {}
+// Get user attribute
+// add user attribute (can be used like add 普通 機密)
+// Will check if exist in global attributes
+// remove user attribute (can be used like remove 普通 機密)
+async function userActions() {
+  const attrs = getAttrs.all();
+  const validAttrs = attrs.filter((attr) => attr.u != "None");
+  const uuidFormatRe =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+  async function getUserIdInput() {
+    while (true) {
+      const userId = (
+        await input({
+          message: `請輸入使用者ID，或直接按下Enter以離開`,
+        })
+      ).trim();
+      if (userId == "") return null;
+      if (!uuidFormatRe.test(userId)) {
+        console.log(
+          `使用者ID格式不正確。需為UUIDv4格式(xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)`
+        );
+        continue;
+      }
+      return userId;
+    }
+  }
+  function showUserAttrs(userId) {
+    const userAttrIds = getUserAttrIds.all(userId).map((row) => row.attrid);
+    console.log(`使用者 ${userId} 的屬性如下：`);
+    console.log(userAttrIds.map((attrid) => attrs[attrid].u).join(" "));
+    console.log("")
+  }
+
+  while (true) {
+    let userAction = null;
+    try {
+      userAction = await select({
+        message: "選擇要執行的指令",
+        choices: [
+          { name: "查看使用者屬性", value: "get-user-attr" },
+          { name: "變更使用者屬性", value: "modify-user-attr" },
+          { name: "返回", value: "return" },
+        ],
+      });
+      switch (userAction) {
+        case "get-user-attr":
+          {
+            const userId = await getUserIdInput();
+            if (!userId) break;
+            showUserAttrs(userId);
+          }
+          break;
+        case "modify-user-attr":
+          {
+            const userId = await getUserIdInput();
+            if (!userId) break;
+            const userAttrIds = getUserAttrIds
+              .all(userId)
+              .map((row) => row.attrid);
+            const modifiedAttrIds = await checkbox({
+              message: "變更使用者屬性：",
+              choices: validAttrs.map((attr) => {
+                return {
+                  name: attr.u,
+                  value: attr.id,
+                  checked: userAttrIds.includes(attr.id),
+                };
+              }),
+            });
+            const addedAttrIds = modifiedAttrIds.filter(
+              (attrId) => !userAttrIds.includes(attrId)
+            );
+            const removedAttrIds = userAttrIds.filter(
+              (attrId) => !modifiedAttrIds.includes(attrId)
+            );
+            console.log(
+              `將會為使用者新增屬性：${addedAttrIds
+                .map((attrId) => attrs[attrId].u)
+                .join(" ")}`
+            );
+            console.log(
+              `將會為使用者移除屬性：${removedAttrIds
+                .map((attrId) => attrs[attrId].u)
+                .join(" ")}`
+            );
+            console.log(
+              `使用者最終屬性：${modifiedAttrIds
+                .map((attrId) => attrs[attrId].u)
+                .join(" ")}`
+            );
+            const yes = await confirm({
+              message: "確定要執行以上變更嗎？",
+            });
+            if (!yes) {
+              console.log(`變更已取消`);
+            } else {
+              removedAttrIds.forEach((attrId) => {
+                removeUserAttrId.run(userId, attrId);
+              });
+              addedAttrIds.forEach((attrId) => {
+                insertUserAttrId.run(userId, attrId);
+              });
+              console.log(`變更已成功`);
+              logger.info(`User attributes modified.`, {
+                added: addedAttrIds.map((attrid) => attrs[attrid].u),
+                removed: removedAttrIds.map((attrid) => attrs[attrid].u),
+              });
+              showUserAttrs(userId);
+            }
+          }
+          break;
+        case "return":
+          return;
+          break;
+      }
+    } catch (error) {
+      handleCtrlCError(error);
+      showAndLogError(error);
+    }
+  }
+}
 
 logger.info(`Command line interface started.`);
 console.group();
@@ -258,13 +394,11 @@ while (true) {
         await userActions();
         break;
       case "exit":
-        logger.info(`Command line interface exited.`);
-        console.groupEnd();
-        console.log(`已離開程式`);
-        process.exit(0);
+        exitProgram();
         break;
     }
   } catch (error) {
+    handleCtrlCError(error);
     showAndLogError(error, adminAction);
   }
 }
