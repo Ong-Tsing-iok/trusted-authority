@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: "data/.env" });
 
 import express from "express";
+import cors from 'cors'
 import { Server } from "socket.io";
 import {
   logger,
@@ -29,6 +30,7 @@ const CERT_PATH = process.env.CERT_PATH || "data/tls.crt";
 
 const app = express();
 app.set(`trust proxy`, true);
+app.use(cors())
 
 const options = {
   key: readFileSync(KEY_PATH),
@@ -169,6 +171,7 @@ io.on("connection", (socket) => {
 
 app.get("/pp", (req, res, next) => {
   try {
+    logger.info("Public parameter fetched.", { ip: req.ip });
     res.status(200).json(TA.serializedPP);
   } catch (error) {
     next(error);
