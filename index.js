@@ -1,9 +1,13 @@
+import dotenv from "dotenv";
+dotenv.config({ path: "data/.env" });
+
 import express from "express";
 import { Server } from "socket.io";
 import {
   logger,
   logSocketInfo,
   logInvalidSchemaWarning,
+  logSocketWarning,
 } from "./src/Logger.js";
 import { createServer } from "https";
 import { readFileSync } from "fs";
@@ -17,6 +21,7 @@ import {
 } from "./src/Utils.js";
 import CryptoHandler from "./src/CryptoHandler.js";
 import { getArrayParamsCount, getUserAttrIds } from "./src/Database.js";
+import { getUserId } from "./src/Communication.js";
 
 const SERVER_PORT = process.env.SERVER_PORT || 3001;
 const KEY_PATH = process.env.KEY_PATH || "data/tls.key";
@@ -77,6 +82,7 @@ io.on("connection", (socket) => {
       // Check if user is registered on server.
       const userId = await getUserId(publicKey);
       if (!userId) {
+        logSocketWarning(socket, actionStr + " but is not registered.");
         cb({ errorMsg: NotRegisteredInErrorMsg });
         return;
       }
@@ -172,7 +178,7 @@ app.get("/pp", (req, res, next) => {
 // Error handler
 app.use((err, req, res, next) => {
   logger.error(err, { ip: req.ip });
-  res.status(500)// also modify server
+  res.status(500); // also modify server
 });
 
 server.listen(SERVER_PORT, () => {

@@ -13,6 +13,7 @@
     "@aldenml/ecc": "^1.1.0",
     "@inquirer/prompts": "^7.8.6",
     "better-sqlite3": "^12.4.1",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "mcl-wasm": "^2.0.0",
     "socket.io": "^4.8.1",
