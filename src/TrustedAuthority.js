@@ -114,8 +114,10 @@ export class TrustedAuthority {
     // Update global attribute from database (as CLI could modify it)
     const attrParams = getAttributeArrayParams.all();
     attrParams.forEach((param) => {
-      this._pp.U[param.id] = param.u;
-      this._serializedPP.U[param.id] = param.u;
+      if (param.u != "EOF") {
+        this._pp.U[param.id] = param.u;
+        this._serializedPP.U[param.id] = param.u;
+      }
     });
   }
 

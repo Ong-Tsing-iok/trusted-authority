@@ -151,17 +151,18 @@ io.on("connection", (socket) => {
       // If no previous attribute, new Key is returned.
       let newKey = null;
       const userAttrIds = getUserAttrIds.all();
-      const newY = new Array(attrLen).fill(0);
+      const newY = new Array(TA.arrayParamLength).fill(0);
       userAttrIds.forEach((row) => {
         newY[row.attrid] = 1;
       });
+      newY.at(-1) = 1
       for (let i = 0; i < newY.length; i++) {
         if (y == null || y[i] != newY[i]) {
           newKey = TA.KeyGen(newY);
           break;
         }
       }
-      cb({ newKey }); // new key or null
+      cb({ SK: newKey, y: newY }); // new key or null
     } catch (error) {
       logSocketError(socket, error);
       cb({ errorMsg: InternalServerErrorMsg });
