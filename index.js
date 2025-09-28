@@ -163,8 +163,8 @@ io.on("connection", (socket) => {
           newKey = TA.KeyGen(newY);
           break;
         }
-        logSocketInfo(socket, `Sending search key to client.`)
       }
+      logSocketInfo(socket, `Sending search key to client.`)
       cb({ SK: newKey, y: newY }); // new key or null
     } catch (error) {
       logSocketError(socket, error);
