@@ -9,6 +9,7 @@ import {
   logSocketInfo,
   logInvalidSchemaWarning,
   logSocketWarning,
+  logSocketError,
 } from "./src/Logger.js";
 import { createServer } from "https";
 import { readFileSync } from "fs";
@@ -88,6 +89,7 @@ io.on("connection", (socket) => {
         cb({ errorMsg: NotRegisteredInErrorMsg });
         return;
       }
+      socket.userId = userId
 
       // Generate random message for authentication
       const { message, cipher, spk } = await CryptoHandler.verifyGen(publicKey);
@@ -150,17 +152,18 @@ io.on("connection", (socket) => {
       // Check if user attribute have changed. If not, return null. If changed, calculate and return new key.
       // If no previous attribute, new Key is returned.
       let newKey = null;
-      const userAttrIds = getUserAttrIds.all();
+      const userAttrIds = getUserAttrIds.all(socket.userId);
       const newY = new Array(TA.arrayParamLength).fill(0);
       userAttrIds.forEach((row) => {
         newY[row.attrid] = 1;
       });
-      newY.at(-1) = 1
+      newY[newY.length - 1] = 1
       for (let i = 0; i < newY.length; i++) {
         if (y == null || y[i] != newY[i]) {
           newKey = TA.KeyGen(newY);
           break;
         }
+        logSocketInfo(socket, `Sending search key to client.`)
       }
       cb({ SK: newKey, y: newY }); // new key or null
     } catch (error) {

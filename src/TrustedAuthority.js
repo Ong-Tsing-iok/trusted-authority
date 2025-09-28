@@ -175,26 +175,29 @@ export class TrustedAuthority {
     const mu = new mcl.Fr();
     theta.setByCSPRNG();
     mu.setByCSPRNG();
-    const sk1 = mcl.mul(
-      this._pp.g2,
-      mcl.div(mcl.add(this.msk.alpha, mu), this.msk.beta)
-    );
-    const sk2 = mcl.mul(this._pp.g2, mcl.inv(this.msk.beta));
-    const sk3 = mcl.mul(this._pp.g2, theta);
+    const sk1 = mcl
+      .mul(this._pp.g2, mcl.div(mcl.add(this.msk.alpha, mu), this.msk.beta))
+      .serializeToHexStr();
+    const sk2 = mcl
+      .mul(this._pp.g2, mcl.inv(this.msk.beta))
+      .serializeToHexStr();
+    const sk3 = mcl.mul(this._pp.g2, theta).serializeToHexStr();
     let innerProd = new mcl.Fr(); // will be zero
     // assert.equal(this.msk.s.length, y.length);
-    for (i = 0; i < this.msk.s.length; i++) {
+    for (let i = 0; i < this.msk.s.length; i++) {
       if (y[i] == 1) {
         innerProd = mcl.add(innerProd, this.msk.s[i]);
       }
     }
-    const sky = mcl.mul(
-      this._pp.g2,
-      mcl.div(mcl.sub(mu, mcl.mul(theta, innerProd)), this.msk.beta)
-    );
+    const sky = mcl
+      .mul(
+        this._pp.g2,
+        mcl.div(mcl.sub(mu, mcl.mul(theta, innerProd)), this.msk.beta)
+      )
+      .serializeToHexStr();
     const SK = { sk1, sk2, sk3, sky };
     // console.log(SK);
     // console.log(y);
-    return { SK, y };
+    return SK;
   }
 }
