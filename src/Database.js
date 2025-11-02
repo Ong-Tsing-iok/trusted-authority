@@ -1,7 +1,11 @@
+/**
+ * This file handles database for ABSE parameters and user attributes
+ */
 import Database from "better-sqlite3";
 import { logger } from "./Logger.js";
 
 const db = new Database("data/TA.db", /*{ verbose: console.log }*/);
+// Global/private parameters for ABSE
 db.prepare(
   `CREATE TABLE IF NOT EXISTS params (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,6 +17,7 @@ db.prepare(
     h TEXT not null
     );`
 ).run();
+// Global/private parameters for ABSE in arrays
 db.prepare(
   `CREATE TABLE IF NOT EXISTS array_params (
     id INTEGER not null PRIMARY KEY,

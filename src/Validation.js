@@ -1,3 +1,6 @@
+/**
+ * This file handles user input verification.
+ */
 import { z } from 'zod/v4'
 
 // CryptoHandler.js

@@ -1,3 +1,6 @@
+/**
+ * This file handles the command line interface for managing user attribute and attribute names.
+ */
 import { input, select, confirm, checkbox } from "@inquirer/prompts";
 import Table from "tty-table";
 import winston, { format } from "winston";

@@ -1,56 +1,16 @@
+/**
+ * This file handles cryptography for user verification
+ */
 import {
   pre_schema1_MessageGen,
   pre_schema1_SigningKeyGen,
   pre_schema1_Encrypt,
-  pre_schema1_ReEncrypt
 } from '@aldenml/ecc'
-import { logger } from './Logger.js'
 import { Base64Schema } from './Validation.js'
 
-const reencrypt = async (rekey, cipher, aSpk, bPk) => {
-  const parsedRekey = Base64Schema.parse(rekey)
-  const parsedCipher = Base64Schema.parse(cipher)
-  const parsedASpk = Base64Schema.parse(aSpk)
-  const parsedBPk = Base64Schema.parse(bPk)
-
-  logger.debug(
-    `rekey: ${parsedRekey}, cipher: ${parsedCipher}, aSpk: ${parsedASpk}, bPk: ${parsedBPk}`
-  )
-  const signingArray = await pre_schema1_SigningKeyGen()
-  const rekeyArray = new Uint8Array(Buffer.from(parsedRekey, 'base64'))
-  const cipherArray = new Uint8Array(Buffer.from(parsedCipher, 'base64'))
-  const aSpkArray = new Uint8Array(Buffer.from(parsedASpk, 'base64'))
-  const bPkArray = new Uint8Array(Buffer.from(parsedBPk, 'base64'))
-  const recipherArray = await pre_schema1_ReEncrypt(
-    cipherArray,
-    rekeyArray,
-    aSpkArray,
-    bPkArray,
-    signingArray
-  )
-  if (recipherArray === null) {
-    throw new Error('Failed to reencrypt.')
-  }
-  logger.debug(`spk: ${Buffer.from(signingArray.spk).toString('base64')}`)
-  logger.debug(`ssk: ${Buffer.from(signingArray.ssk).toString('base64')}`)
-  logger.debug(`recipher: ${Buffer.from(recipherArray).toString('base64')}`)
-  return {
-    recipher: Buffer.from(recipherArray).toString('base64'),
-    spk: Buffer.from(signingArray.spk).toString('base64')
-  }
-}
 
 /**
- *
- * @returns {Promise<string>}
- */
-const messageGen = async () => {
-  const message = await pre_schema1_MessageGen()
-  return Buffer.from(message).toString('base64')
-}
-
-/**
- *
+ * Generate a random message and cipher for verification
  * @param {string} publicKey
  * @returns {Promise<{message: string, cipher: string, spk: string}>}
  */
@@ -72,8 +32,6 @@ const verifyGen = async (publicKey) => {
 }
 
 const CryptoHandler = {
-  reencrypt,
-  messageGen,
   verifyGen
 }
 export default CryptoHandler

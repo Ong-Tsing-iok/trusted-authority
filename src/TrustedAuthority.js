@@ -1,3 +1,6 @@
+/**
+ * This file handles operations for attributed based searchable encryption.
+ */
 import * as mcl from "mcl-wasm";
 import { logger } from "./Logger.js";
 import {
@@ -9,11 +12,32 @@ import {
 } from "./Database.js";
 
 export class TrustedAuthority {
-  msk;
-  _pp;
-  _serializedPP;
+  msk = {
+    alpha,
+    beta,
+    s,
+  };
+  _pp = {
+    g1,
+    g2,
+    eggalpha,
+    h,
+    h_i,
+    U,
+  };
+  _serializedPP = {
+    g1,
+    g2,
+    eggalpha,
+    h,
+    h_i,
+    U,
+  };
   constructor() {}
 
+  /**
+   * Initialize mcl and setup parameters
+   */
   async init() {
     await mcl.init(mcl.BLS12_381);
     if (!this.retrieveParams()) {
@@ -26,6 +50,10 @@ export class TrustedAuthority {
   //   this.updateGlobalAttribute();
   //   return this._pp;
   // }
+
+  /**
+   * Serialized public parameters
+   */
   get serializedPP() {
     this.updateGlobalAttribute();
     return this._serializedPP;
@@ -35,6 +63,10 @@ export class TrustedAuthority {
     return this.msk.s.length;
   }
 
+  /**
+   * Retrieve parameters from database and store in variables
+   * @returns Whether retrieval is success
+   */
   retrieveParams() {
     const params = getParams.get();
     if (!params) return false;
@@ -72,6 +104,9 @@ export class TrustedAuthority {
     };
     return true;
   }
+  /**
+   * Store parameters into database
+   */
   storeParams() {
     this._serializedPP = {
       g1: this._pp.g1.serializeToHexStr(),
@@ -110,8 +145,10 @@ export class TrustedAuthority {
     logger.info(`Parameters stored in database.`);
   }
 
+  /**
+   * Update global attributes from database (as CLI could modify it)
+   */
   updateGlobalAttribute() {
-    // Update global attribute from database (as CLI could modify it)
     const attrParams = getAttributeArrayParams.all();
     attrParams.forEach((param) => {
       if (param.u != "EOF") {
@@ -121,6 +158,9 @@ export class TrustedAuthority {
     });
   }
 
+  /**
+   * Setup parameters
+   */
   SetUp() {
     logger.info(`This is the first time for the server to run. Doing setup.`);
     const attr_num = process.env.ATTR_NUM || 32;
@@ -161,6 +201,11 @@ export class TrustedAuthority {
     this._pp = pp;
   }
 
+  /**
+   * Compute a search key for an attribute vector.
+   * @param {[1|0]} y the attribute vector
+   * @returns search keys
+   */
   KeyGen(y) {
     // this.updateGlobalAttribute();
     // Attribute vector y

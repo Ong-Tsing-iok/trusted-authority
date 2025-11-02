@@ -1,3 +1,6 @@
+/**
+ * This file handles communication with client, mainly for search key retrieval.
+ */
 import dotenv from "dotenv";
 dotenv.config({ path: "data/.env" });
 
@@ -29,6 +32,7 @@ const SERVER_PORT = process.env.SERVER_PORT || 2999;
 const KEY_PATH = process.env.KEY_PATH || "data/tls.key";
 const CERT_PATH = process.env.CERT_PATH || "data/tls.crt";
 
+// Create an express server
 const app = express();
 app.set(`trust proxy`, true);
 app.use(cors())
@@ -64,6 +68,9 @@ io.on("connection", (socket) => {
     logSocketInfo(socket, "Client disconnected.", { event: undefined });
   });
 
+  /**
+   * Client ask to authenticate, will ask to decode a verifying message.
+   */
   socket.on("auth", async (request, cb) => {
     try {
       const actionStr = "Client asks to authenticate";
@@ -107,7 +114,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Authentication response event
+  /**
+   * Client respond to authenticate with the verifying message.
+   * Returns with the user's search key.
+   */
   socket.on("auth-res", async (request, cb) => {
     try {
       const actionStr = "Client responds to authentication";
@@ -151,6 +161,7 @@ io.on("connection", (socket) => {
 
       // Check if user attribute have changed. If not, return null. If changed, calculate and return new key.
       // If no previous attribute, new Key is returned.
+      // Actually always calculate new key.
       let newKey = null;
       const userAttrIds = getUserAttrIds.all(socket.userId);
       const newY = new Array(TA.arrayParamLength).fill(0);
@@ -173,6 +184,9 @@ io.on("connection", (socket) => {
   });
 });
 
+/**
+ * Path for getting public parameters
+ */
 app.get("/pp", (req, res, next) => {
   try {
     logger.info("Public parameter fetched.", { ip: req.ip });

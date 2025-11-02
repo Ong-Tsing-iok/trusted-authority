@@ -1,3 +1,6 @@
+/**
+ * This file handles communication with cloud server.
+ */
 import { logger } from "./Logger.js";
 
 const CLOUD_SERVER_URL = process.env.CLOUD_SERVER_URL || "localhost:3001";
@@ -5,6 +8,11 @@ const CLOUD_SERVER_URL = process.env.CLOUD_SERVER_URL || "localhost:3001";
 // Should be removed in real deployment environment
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
+/**
+ * Get userId from cloud server with publickey
+ * @param {string} publicKey 
+ * @returns {Promise<string | null>} userId
+ */
 export async function getUserId(publicKey) {
   try {
     const response = await fetch(
@@ -15,7 +23,7 @@ export async function getUserId(publicKey) {
       return null
     }
     const data = await response.json()
-    console.log(data)
+    // console.log(data)
     return data.userId
   } catch (error) {
     logger.error(error);
