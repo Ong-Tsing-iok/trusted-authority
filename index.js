@@ -25,7 +25,7 @@ import CryptoHandler from "./src/CryptoHandler.js";
 import { getArrayParamsCount, getUserAttrIds } from "./src/Database.js";
 import { getUserId } from "./src/Communication.js";
 
-const SERVER_PORT = process.env.SERVER_PORT || 3001;
+const SERVER_PORT = process.env.SERVER_PORT || 2999;
 const KEY_PATH = process.env.KEY_PATH || "data/tls.key";
 const CERT_PATH = process.env.CERT_PATH || "data/tls.crt";
 
