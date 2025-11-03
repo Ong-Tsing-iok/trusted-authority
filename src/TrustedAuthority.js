@@ -13,25 +13,25 @@ import {
 
 export class TrustedAuthority {
   msk = {
-    alpha,
-    beta,
-    s,
+    alpha: undefined,
+    beta: undefined,
+    s: undefined,
   };
   _pp = {
-    g1,
-    g2,
-    eggalpha,
-    h,
-    h_i,
-    U,
+    g1: undefined,
+    g2: undefined,
+    eggalpha: undefined,
+    h: undefined,
+    h_i: undefined,
+    U: undefined,
   };
   _serializedPP = {
-    g1,
-    g2,
-    eggalpha,
-    h,
-    h_i,
-    U,
+    g1: undefined,
+    g2: undefined,
+    eggalpha: undefined,
+    h: undefined,
+    h_i: undefined,
+    U: undefined,
   };
   constructor() {}
 
