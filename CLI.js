@@ -53,7 +53,7 @@ function handleCtrlCError(error) {
 
 function chunk(arr, size) {
   let chunks = []
-  for (i = 0; i < arr.length; i += size) {
+  for (let i = 0; i < arr.length; i += size) {
     chunks.push(arr.slice(i, Math.min(i + size, arr.length)));
   }
   const originalLength = chunks.at(-1).length;

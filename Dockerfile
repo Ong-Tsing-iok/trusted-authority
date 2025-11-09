@@ -11,5 +11,6 @@ COPY manage.sh ./manage
 RUN chmod +x ./manage
 
 EXPOSE 2999
+RUN chown -R 1000/usr/src/app
 USER 1000
 CMD ["node", "index.js"]
