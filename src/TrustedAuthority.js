@@ -33,7 +33,6 @@ export class TrustedAuthority {
     h_i: undefined,
     U: undefined,
   };
-  constructor() {}
 
   /**
    * Initialize mcl and setup parameters
@@ -75,12 +74,12 @@ export class TrustedAuthority {
     const s = new Array(arrayParams.length);
     const h_i = new Array(arrayParams.length);
     const serializedH_i = new Array(arrayParams.length);
-    arrayParams.forEach((array_param) => {
+    for (const array_param of arrayParams) {
       s[array_param.id] = mcl.deserializeHexStrToFr(array_param.s);
       h_i[array_param.id] = mcl.deserializeHexStrToG1(array_param.h_i);
       serializedH_i[array_param.id] = array_param.h_i;
       if (array_param.u != "EOF") U[array_param.id] = array_param.u;
-    });
+    }
     this.msk = {
       alpha: mcl.deserializeHexStrToFr(params.alpha),
       beta: mcl.deserializeHexStrToFr(params.beta),
@@ -150,12 +149,12 @@ export class TrustedAuthority {
    */
   updateGlobalAttribute() {
     const attrParams = getAttributeArrayParams.all();
-    attrParams.forEach((param) => {
+    for (const param of attrParams) {
       if (param.u != "EOF") {
         this._pp.U[param.id] = param.u;
         this._serializedPP.U[param.id] = param.u;
       }
-    });
+    }
   }
 
   /**
@@ -165,7 +164,7 @@ export class TrustedAuthority {
     logger.info(`This is the first time for the server to run. Doing setup.`);
     const attr_num = process.env.ATTR_NUM || 32;
     const U = ["機密", "極機密", "絕對機密"].concat(
-      ...Array(Math.max(attr_num - 3, 0)).fill("None")
+      ...new Array(Math.max(attr_num - 3, 0)).fill("None")
     );
     // console.log(U.length);
     // Follow convention from https://github.com/zcash/librustzcash/blob/6e0364cd42a2b3d2b958a54771ef51a8db79dd29/pairing/src/bls12_381/README.md#generators
@@ -241,8 +240,6 @@ export class TrustedAuthority {
       )
       .serializeToHexStr();
     const SK = { sk1, sk2, sk3, sky };
-    // console.log(SK);
-    // console.log(y);
     return SK;
   }
 }

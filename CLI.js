@@ -10,7 +10,7 @@ const logger = winston.createLogger({
   //   level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
   format: winston.format.combine(
     format.errors({ stack: true }),
-    format.timestamp(/*{ format: timezoned }*/),
+    format.timestamp(),
     format.json()
   ),
   transports: [
@@ -52,7 +52,8 @@ function handleCtrlCError(error) {
 }
 
 function chunk(arr, size) {
-  for (var chunks = [], i = 0; i < arr.length; i += size) {
+  let chunks = []
+  for (i = 0; i < arr.length; i += size) {
     chunks.push(arr.slice(i, Math.min(i + size, arr.length)));
   }
   const originalLength = chunks.at(-1).length;
