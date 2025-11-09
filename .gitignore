@@ -144,3 +144,4 @@ vite.config.ts.timestamp-*
 /data
 .scannerwork/
 sonar-project.properties
+*.tar
