@@ -1,8 +1,9 @@
 /**
  * This file handles communication with client, mainly for search key retrieval.
  */
-import dotenv from "dotenv";
-dotenv.config({ path: "data/.env" });
+// import dotenv from "dotenv";
+// dotenv.config({ path: "data/.env" });
+import './src/EnvInjection.js'
 
 import express from "express";
 import cors from 'cors'

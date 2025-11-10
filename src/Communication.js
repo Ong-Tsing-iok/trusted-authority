@@ -4,6 +4,7 @@
 import { logger } from "./Logger.js";
 
 const CLOUD_SERVER_URL = process.env.CLOUD_SERVER_URL || "localhost:3001";
+logger.info(`Cloud server url: https://${CLOUD_SERVER_URL}`)
 // This is used because we only have self-signed certificates.
 // Should be removed in real deployment environment
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
