@@ -1,7 +1,8 @@
-FROM node:22-alpine
+FROM node:alpine
 
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
+RUN apk add --no-cache g++ make python3
 COPY ["package.json", "package-lock.json", "./"]
 RUN npm install --omit=dev
 COPY src ./src
