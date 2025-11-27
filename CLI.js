@@ -65,7 +65,7 @@ function chunk(arr, size) {
 async function globalActions() {
   const attrColumns = 8;
   let attrs = getAttrs.all();
-  const attrHeader = Array(attrColumns).fill({
+  const attrHeader = new Array(attrColumns).fill({
     formatter: function (value) {
       if (value.newU) {
         if (value.u == "None")
@@ -367,7 +367,6 @@ async function userActions() {
           break;
         case "return":
           return;
-          break;
       }
     } catch (error) {
       handleCtrlCError(error);
